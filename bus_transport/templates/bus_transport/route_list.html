@@ -1,0 +1,46 @@
+{% extends "bus_transport/base.html" %}
+
+{% block content %}
+<h1 class="mb-3">Mysuru Bus Routes</h1>
+
+<form method="get" class="row mb-4">
+    <div class="col-md-6">
+        <input type="text" name="q" class="form-control"
+               placeholder="Search by route number or area..."
+               value="{{ query }}">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="submit">Search</button>
+    </div>
+</form>
+
+{% if routes %}
+    <div class="list-group">
+        {% for route in routes %}
+
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+
+                <!-- Route Info -->
+                <div>
+                    <strong>Route {{ route.route_number }}</strong><br>
+                    {{ route.start_point }} → {{ route.end_point }}
+                </div>
+
+                <!-- View on Map Button -->
+                <a href="{% url 'bus_transport:route_detail' route.id %}"
+                   class="btn btn-outline-primary btn-sm">
+                    View on Map
+                </a>
+
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No routes found.</p>
+{% endif %}
+
+{% endblock %}
+

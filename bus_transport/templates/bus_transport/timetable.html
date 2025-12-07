@@ -1,0 +1,29 @@
+{% extends "bus_transport/base.html" %}
+
+{% block content %}
+<h2>Timetable – Route {{ route.route_number }}</h2>
+<p><strong>{{ route.start_point }}</strong> → <strong>{{ route.end_point }}</strong></p>
+
+<table class="table table-bordered mt-3">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Departure</th>
+        <th>Arrival</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for t in timetable %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ t.departure_time }}</td>
+            <td>{{ t.arrival_time }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'bus_transport:route_detail' route.id %}" class="btn btn-secondary">
+    Back to Route
+</a>
+{% endblock %}

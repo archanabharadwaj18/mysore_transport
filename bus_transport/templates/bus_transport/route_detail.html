@@ -1,0 +1,409 @@
+{% extends "bus_transport/base.html" %}
+{% load static %}
+
+{% block content %}
+<h2>Route {{ route.route_number }}</h2>
+<p><strong>{{ route.start_point }}</strong> → <strong>{{ route.end_point }}</strong></p>
+
+<hr>
+
+<h4>Stops</h4>
+<ol>
+    {% for stop in stops %}
+        <li>{{ stop.stop_name }}</li>
+    {% endfor %}
+</ol>
+
+<hr>
+
+<h4>Timetable</h4>
+{% if timetable %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Departure</th>
+            <th>Arrival</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for t in timetable %}
+            <tr>
+                <td>{{ t.departure_time }}</td>
+                <td>{{ t.arrival_time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'bus_transport:timetable_page' route.id %}" class="btn btn-outline-primary">
+        View full timetable
+    </a>
+{% else %}
+    <p>No timetable available for this route.</p>
+{% endif %}
+
+<hr>
+
+<h4>Route Map</h4>
+<div id="map" style="height: 400px; width: 100%; margin-bottom: 20px;"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+//Custom bus icon
+var busIcon = L.icon({
+    iconUrl: "{% static 'bus_transport/img/bus.png' %}",
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -22]
+});
+
+    // Base map
+    var map = L.map('map').setView([12.2958, 76.6394], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    // Build a JS array of stops from Django (names only)
+    const stopsFromDjango = [
+        {% for stop in stops %}
+            "{{ stop.stop_name|escapejs }}",
+        {% endfor %}
+    ];
+
+    // Helper: add markers + line given a list of [lat, lng, name]
+    function renderRoute(latlngStops) {
+         if (!latlngStops.length) return;
+
+        const latlngs = [];
+
+        latlngStops.forEach(s => {
+            const lat = s[0];
+            const lng = s[1];
+            const name = s[2];
+
+            latlngs.push([lat, lng]);
+
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(name);
+        });
+
+        
+
+        const routeLine = L.polyline(latlngs, { color: 'blue', weight: 4 }).addTo(map);
+        map.fitBounds(routeLine.getBounds());
+
+        var movingBus = L.marker(latlngs[0], { icon: busIcon }).addTo(map);
+    let i = 0;
+
+    function animateBus() {
+        if (i < latlngs.length) {
+            movingBus.setLatLng(latlngs[i]);
+            i++;
+            setTimeout(animateBus, 600);
+        }
+    }
+    animateBus();
+}
+
+    // -------------------------
+    // SPECIAL CASE: V-201L AIRCON
+    // -------------------------
+    const routeNumber = "{{ route.route_number }}";
+
+    if (routeNumber === "V-201L AIRCON" || routeNumber === "V-201L") {
+        // Approximate real-world coordinate path for V-201L → Chamundi Hill
+        // (order follows your stop list)
+        const v201lStops = [
+            [12.3051, 76.6558, "C.B.S Platform 21/2"],                // near Palace/CBS
+            [12.3052, 76.6558, "Mysore Palace"],
+            [12.3018, 76.6573, "Hardinge Circle"],
+            [12.2969, 76.6673, "Mysore Zoo"],
+            [12.2950, 76.6745, "Race Course"],
+            [12.2932, 76.6865, "Administrative Training Institute (Police Bhavan)"],
+            [12.2885, 76.6925, "Jockey Quarters (Kurubarahalli Circle)"],
+            [12.2838, 76.6975, "J.C. Nagara"],
+            [12.2765, 76.7050, "Tavare Katte"],
+            [12.2725, 76.7105, "K.R. Mill Guest House"],
+            [12.2705, 76.7210, "Nandi Cross"],
+            [12.2723, 76.7396, "Chamundi Hill"]
+        ];
+
+        renderRoute(v201lStops);
+
+    } 
+    else if (routeNumber === "115") {
+
+    const r115Stops = [
+        [12.3051, 76.6557, "C.B.S Platform 31"],
+        [12.3050, 76.6520, "Mysore Rural Bus Stand"],
+        [12.3073, 76.6529, "K R Hospital"],
+        [12.3100, 76.6559, "Railway Station"],
+        [12.3094, 76.6616, "Dasappa Circle"],
+        [12.3126, 76.6639, "Vani Vilas Waterworks"],
+        [12.3148, 76.6647, "Akashavani"],
+        [12.3162, 76.6654, "Vonti Koppal Temple"],
+        [12.3180, 76.6678, "V.V Puram Post Office"],
+        [12.3193, 76.6695, "Mathru Mandali"],
+        [12.3210, 76.6712, "St Joseph Convent"],
+        [12.3222, 76.6725, "B.M Hospital"],
+        [12.3241, 76.6746, "Premier Studio"],
+        [12.3267, 76.6760, "Aishwarya Petrol Bunk"],
+        [12.3304, 76.6798, "Hinkal"],
+        [12.3334, 76.6832, "Yashaswi Choultry"],
+        [12.3360, 76.6869, "S.R.S Hootagalli"],
+        [12.3392, 76.6894, "Hootagalli"],
+        [12.3416, 76.6901, "Hootagalli Housing Board"],
+        [12.3438, 76.6923, "Mathaji Bhandar"],
+        [12.3460, 76.6938, "Vijaya Bank"],
+        [12.3478, 76.6954, "Rotary School"],
+        [12.3495, 76.6970, "Hootagalli Water Tank"]
+    ];
+
+    renderRoute(r115Stops);
+    } else if (routeNumber === "80F") {
+
+    const r80fStops = [
+        [12.3051, 76.6557, "C.B.S Platform 20"],
+        [12.3040, 76.6595, "Vani Vilas Market"],
+        [12.3026, 76.6618, "Siddappa Square"],
+        [12.3020, 76.6649, "R.T.O"],
+        [12.3001, 76.6667, "Ashoka Circle"],
+        [12.2987, 76.6685, "Under Bridge"],
+        [12.2974, 76.6702, "K.G Koppal"],
+        [12.2959, 76.6730, "Apollo Hospital"],
+        [12.2937, 76.6753, "Cauvery School"],
+        [12.2920, 76.6767, "Kuvempu Nagar K.E.B"],
+        [12.2905, 76.6791, "R.M.P Quarters"],
+        [12.2889, 76.6808, "Aravinda Nagar"],
+        [12.2873, 76.6822, "Kuvempu Nagar"]
+    ];
+
+    renderRoute(r80fStops);
+    }
+    else if (routeNumber === "13") {
+
+    const r13Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 14"],
+        [12.3040, 76.6595, "Vani Vilas Market"],
+        [12.3015, 76.6620, "J.S.S Hospital"],
+        [12.2998, 76.6642, "Ramanuja Road 8th Cross"],
+        [12.2987, 76.6655, "Ramanuja Road 13th Cross"],
+        [12.2974, 76.6669, "St. Marys Convent"],
+        [12.2960, 76.6686, "Chamundipuram"],
+        [12.2938, 76.6705, "Five Light Circle"],
+        [12.2920, 76.6727, "Silk Factory"],
+        [12.2905, 76.6750, "N.I.E College"],
+        [12.2884, 76.6771, "Railway Workshop"],
+        [12.2868, 76.6800, "Nachanahalli Palya"],
+        [12.2851, 76.6825, "Toll Gate"],
+        [12.2833, 76.6846, "Shivapura"],
+        [12.2815, 76.6868, "Sri Rampura"]
+    ];
+
+    renderRoute(r13Stops);
+    } else if (routeNumber === "62") {
+
+    const r62Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 3"],
+        [12.3052, 76.6558, "Mysore Palace"],
+        [12.3050, 76.6520, "Mysore Rural Bus Stand"],
+        [12.3073, 76.6529, "K.R Hospital"],
+        [12.3100, 76.6559, "Railway Station"],
+        [12.3094, 76.6616, "Dasappa Circle"],
+        [12.3123, 76.6638, "Vani Vilas Water Works"],
+        [12.3148, 76.6647, "Akashavani"],
+        [12.3164, 76.6660, "Vonti Koppal Temple"],
+        [12.3184, 76.6683, "E.S.I Hospital"],
+        [12.3198, 76.6699, "P.K Sanitorium"],
+        [12.3237, 76.6735, "Metagalli Police Station"],
+        [12.3255, 76.6752, "Sanjeevini Circle"],
+        [12.3271, 76.6770, "Basavanagudi"],
+        [12.3292, 76.6786, "State Bank Of India"],
+        [12.3311, 76.6802, "Surya Bakery"],
+        [12.3335, 76.6818, "Abhishek Circle"],
+        [12.3356, 76.6834, "Made Gowda Circle"],
+        [12.3369, 76.6850, "C.I.T.B Choultry"],
+        [12.3387, 76.6864, "Mayura Circle"],
+        [12.3404, 76.6879, "Kaveri Circle"],
+        [12.3417, 76.6898, "Sankranthi Circle"],
+        [12.3430, 76.6916, "Kitturu Rani Chennamma Circle"],
+        [12.3452, 76.6930, "Laxmikantha Nagar"],
+        [12.3470, 76.6949, "Ganesh Temple"],
+        [12.3490, 76.6963, "Bharath Cancer Hospital"],
+        [12.3511, 76.6982, "Shobha Gate"],
+        [12.3530, 76.7000, "Infosys"],
+        [12.3560, 76.7040, "L & T"],
+        [12.3580, 76.7060, "Kuvempu Nagar"]
+    ];
+
+    renderRoute(r62Stops);
+    }
+    else if (routeNumber === "53") {
+
+    const r53Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 19"],
+        [12.3050, 76.6525, "Laxmi Talkies"],
+        [12.3040, 76.6508, "Seetha Vilas Choultry"],
+        [12.3028, 76.6492, "Ramaswamy Circle"],
+        [12.3014, 76.6478, "Fire Brigade"],
+        [12.2999, 76.6460, "Saraswathipuram 1st Main"],
+        [12.2988, 76.6450, "Saraswathipuram Park"],
+        [12.2975, 76.6441, "Bake Point"],
+        [12.2961, 76.6430, "Kamakshi Hospital"],
+        [12.2950, 76.6420, "Vijaya Bank"],
+        [12.2938, 76.6408, "Ramakrishna Nagar Circle"],
+        [12.2926, 76.6396, "Amma Complex"],
+        [12.2915, 76.6385, "Kuvempu Nagar Complex"],
+        [12.2900, 76.6375, "M Block"],
+        [12.2888, 76.6362, "Kuvempu Nagar"],
+        [12.2875, 76.6351, "Vivekananda Circle"],
+        [12.2863, 76.6340, "Amrutha Bakery"],
+        [12.2850, 76.6328, "Sri Rampura Water Tank"],
+        [12.2836, 76.6318, "V.B Bakery"],
+        [12.2824, 76.6305, "B.E.M.L Nagar"]
+    ];
+
+    renderRoute(r53Stops);
+
+    } else if (routeNumber === "116") {
+
+    const r116Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 3"],
+        [12.3052, 76.6558, "Mysore Palace"],
+        [12.3050, 76.6520, "Mysore Rural Bus Stand"],
+        [12.3073, 76.6529, "K.R Hospital"],
+        [12.3100, 76.6559, "Railway Station"],
+        [12.3094, 76.6616, "Dasappa Circle"],
+        [12.3123, 76.6638, "Vani Vilas Water Works"],
+        [12.3148, 76.6647, "Akashavani"],
+        [12.3164, 76.6660, "Vonti Koppal Temple"],
+        [12.3180, 76.6678, "V.V Puram Post Office"],
+        [12.3193, 76.6695, "Mathru Mandali"],
+        [12.3210, 76.6712, "St Joseph Convent"],
+        [12.3222, 76.6725, "B.M Hospital"],
+        [12.3241, 76.6746, "Premier Studio"],
+        [12.3267, 76.6760, "Aishwarya Petrol Bunk"],
+        [12.3304, 76.6798, "Hinkal"],
+        [12.3334, 76.6832, "Yashaswi Choultry"],
+        [12.3360, 76.6869, "S.R.S Hootagalli"],
+        [12.3392, 76.6894, "Hootagalli"],
+        [12.3416, 76.6901, "Hootagalli Housing Board"],
+        [12.3439, 76.6920, "Daba Stop"],
+        [12.3461, 76.6940, "Belawadi"],
+        [12.3485, 76.6965, "Lingadevara Koppalu"],
+        [12.3510, 76.6990, "Yelawala Government Hospital"],
+        [12.3528, 76.7010, "Yelawala"],
+        [12.3547, 76.7043, "Infosys"],
+        [12.3575, 76.7070, "L & T"]
+    ];
+
+    renderRoute(r116Stops);
+
+    } else if (routeNumber === "133") {
+
+    const r133Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 5"],
+        [12.3052, 76.6558, "Mysore Palace"],
+        [12.3050, 76.6520, "Mysore Rural Bus Stand"],
+        [12.3085, 76.6505, "Ayurveda Hospital"],
+        [12.3105, 76.6490, "R.M.C"],
+        [12.3120, 76.6475, "Deaf And Dumb School"],
+        [12.3136, 76.6460, "Sunanda Factory"],
+        [12.3150, 76.6445, "Highway Circle"],
+        [12.3172, 76.6432, "Manjunatha Hotel"],
+        [12.3190, 76.6420, "Jawa"],
+        [12.3211, 76.6408, "Manjunathapura"],
+        [12.3234, 76.6392, "Brindavan Extn. 2nd Stage"],
+        [12.3250, 76.6378, "Brindavan Extn. 1st Stage"],
+        [12.3267, 76.6360, "P.K Sanitorium"],
+        [12.3285, 76.6345, "Kumbarakoppal Cross"],
+        [12.3310, 76.6330, "Metagalli"]
+    ];
+
+    renderRoute(r133Stops);
+
+    } else if (routeNumber === "2") {
+
+    const r2Stops = [
+        [12.3051, 76.6558, "C.B.S Platform 14"],
+        [12.3040, 76.6595, "Vani Vilas Market"],
+        [12.3015, 76.6620, "J.S.S Hospital"],
+        [12.2998, 76.6642, "Ramanuja Road 8th Cross"],
+        [12.2987, 76.6655, "Ramanuja Road 13th Cross"],
+        [12.2974, 76.6669, "St. Marys Convent"],
+        [12.2960, 76.6686, "Chamundipuram"],
+        [12.2938, 76.6705, "Five Light Circle"],
+        [12.2920, 76.6727, "Silk Factory"],
+        [12.2905, 76.6750, "N.I.E College"],
+        [12.2884, 76.6771, "Railway Work Shop"],
+        [12.2868, 76.6800, "Nachanahalli Palya"],
+        [12.2851, 76.6825, "Toll Gate"],
+        [12.2833, 76.6846, "Shivapura"],
+        [12.2815, 76.6868, "Sri Rampura"]
+    ];
+
+    renderRoute(r2Stops);
+
+    } else if (routeNumber === "266") {
+
+    const r266Stops = [
+        [12.3051, 76.6557, "C.B.S Platform 31"],
+        [12.3052, 76.6558, "Mysore Palace"],
+        [12.3050, 76.6520, "Mysore Rural Bus Stand"],
+        [12.3073, 76.6529, "K.R Hospital"],
+        [12.3100, 76.6559, "Railway Station"],
+        [12.3094, 76.6616, "Dasappa Circle"],
+        [12.3126, 76.6639, "Vani Vilas Water Works"],
+        [12.3148, 76.6647, "Akashavani"],
+        [12.3162, 76.6654, "Vonti Koppal Temple"],
+        [12.3180, 76.6678, "V.V Puram Post Office"],
+        [12.3193, 76.6695, "Mathru Mandali"],
+        [12.3210, 76.6712, "St Joseph Convent"],
+        [12.3222, 76.6725, "B.M Hospital"],
+        [12.3241, 76.6746, "Premier Studio"],
+        [12.3267, 76.6760, "Aishwarya Petrol Bunk"],
+        [12.3304, 76.6798, "Hinkal"],
+        [12.3334, 76.6832, "Yashaswi Choultry"],
+        [12.3360, 76.6869, "S.R.S Hootagalli"],
+        [12.3392, 76.6894, "Hootagalli"],
+        [12.3416, 76.6901, "Hootagalli Housing Board"],
+        [12.3439, 76.6920, "Daba Stop"],
+        [12.3461, 76.6940, "Belawadi"],
+        [12.3485, 76.6965, "Lingadevara Koppalu"],
+        [12.3510, 76.6990, "Yelawala Government Hospital"],
+        [12.3528, 76.7010, "Yelawala"]
+    ];
+
+    renderRoute(r266Stops);
+    }
+    
+    else {
+        // Default fallback: approximate diagonal layout using Django stops
+        if (stopsFromDjango.length > 0) {
+            const baseLat = 12.2958;
+            const baseLng = 76.6394;
+
+            // simple spacing based on count
+            let spacing;
+            if (stopsFromDjango.length <= 10) spacing = 0.009;
+            else if (stopsFromDjango.length <= 20) spacing = 0.006;
+            else spacing = 0.004;
+
+            const latlngStops = [];
+
+            stopsFromDjango.forEach((name, index) => {
+                const lat = baseLat + index * spacing;
+                const lng = baseLng + index * spacing;
+                latlngStops.push([lat, lng, name]);
+            });
+
+            renderRoute(latlngStops);
+        }
+    }
+</script>
+{% endblock %}
+

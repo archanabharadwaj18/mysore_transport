@@ -1,37 +1,27 @@
-Mysuru Public Transport Route Viewer — Django Project
+Mysuru Public Transport Route Viewer (Django)
 
-A simple Django web application to view bus routes, stops, and timetables for Mysuru public transport.
-Includes interactive maps, JSON API, and admin CRUD operations.
+A Django-based web application to explore Mysuru public transport routes, stops, and timetables with interactive map visualization.
 
-🚀 Features
+---
 
-View all bus routes
+Features
 
-Search routes by number or area
+- View all bus routes
+- Search routes by number or area
+- Detailed route page with:
+  - Stops list
+  - Timetable
+  - Interactive Leaflet map
+- Animated bus movement on map
+- JSON API endpoint for route data
+- Django admin panel for full CRUD:
+  - Add / update / delete routes
+  - Manage stops and timetables
 
-Route detail page showing:
+---
 
-Stops
+Project Structure
 
-Timetable
-
-Interactive Leaflet map
-
-Animated bus movement on map
-
-JSON API endpoint
-
-Django admin panel with:
-
-Add routes
-
-Add stops
-
-Add timetable
-
-Update/Delete routes
-
-📂 Project Structure
 transport/
 │── bus_transport/
 │   ├── templates/
@@ -42,70 +32,57 @@ transport/
 │   └── urls.py
 │── manage.py
 
-⚙️ Tech Stack
+---
 
-Python 3
+Tech Stack
 
-Django
+- Python 3
+- Django
+- SQLite
+- Leaflet.js
+- Bootstrap 5
 
-SQLite
+---
 
-Leaflet.js
+Getting Started
 
-Bootstrap 5
-
-▶️ How to Run
 git clone https://github.com/archanabharadwaj18/mysore_transport.git
 cd mysore_transport
 
 python -m venv env
-env\Scripts\activate     # Windows
+env\Scripts\activate
 
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 
-
-Then open in browser:
-
+Open in browser:
 http://127.0.0.1:8000/
 
-🔑 Admin Panel
+---
 
-Create superuser:
+Admin Panel
 
 python manage.py createsuperuser
 
-
-Login at:
-
 http://127.0.0.1:8000/admin/
 
+---
 
-You can add:
+Map Visualization
 
-Routes
+- Built using Leaflet.js
+- Displays routes with markers and polylines
+- Includes animated bus movement
 
-Stops
+---
 
-Timetables
+API Endpoint
 
-All from Django admin.
+/ api / routes /
 
-🗺️ Maps
+---
 
-Leaflet is used to display route lines and moving bus icon.
-
-Bus icon path:
-
-bus_transport/static/bus_transport/img/bus.png
-
-📡 API Endpoint
-
-Get all routes in JSON:
-
-/api/routes/
-
-👩‍💻 Author
+Author
 
 Archana Bharadwaj
